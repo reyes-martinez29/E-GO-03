@@ -1,0 +1,66 @@
+2026/09/27 16:00:15 consumidor listo (shards=8, ventana=5m0s/10 gen, retención garantizada=4m30s); esperando eventos...
+2026/09/27 16:00:20 recibidos=96098 procesados=96098 (19220 ev/s) ventana=87467 llaves heap=9 MiB inválidos=0
+2026/09/27 16:00:25 recibidos=196092 procesados=196092 (19999 ev/s) ventana=185808 llaves heap=10 MiB inválidos=0
+2026/09/27 16:00:30 recibidos=296097 procesados=296097 (20001 ev/s) ventana=285034 llaves heap=22 MiB inválidos=0
+2026/09/27 16:00:35 recibidos=396110 procesados=396110 (20003 ev/s) ventana=381445 llaves heap=18 MiB inválidos=0
+2026/09/27 16:00:40 recibidos=496090 procesados=496090 (19996 ev/s) ventana=477745 llaves heap=40 MiB inválidos=0
+2026/09/27 16:00:45 recibidos=596100 procesados=596100 (20002 ev/s) ventana=574145 llaves heap=35 MiB inválidos=0
+2026/09/27 16:00:50 recibidos=696097 procesados=696097 (19999 ev/s) ventana=670539 llaves heap=76 MiB inválidos=0
+2026/09/27 16:00:55 recibidos=796090 procesados=796090 (19999 ev/s) ventana=768914 llaves heap=58 MiB inválidos=0
+2026/09/27 16:01:00 recibidos=896080 procesados=896080 (19998 ev/s) ventana=865389 llaves heap=87 MiB inválidos=0
+2026/09/27 16:01:05 recibidos=996115 procesados=996115 (20007 ev/s) ventana=962867 llaves heap=101 MiB inválidos=0
+2026/09/27 16:01:10 recibidos=1096108 procesados=1096108 (19999 ev/s) ventana=1059302 llaves heap=68 MiB inválidos=0
+2026/09/27 16:01:15 recibidos=1196103 procesados=1196103 (19999 ev/s) ventana=1157703 llaves heap=93 MiB inválidos=0
+2026/09/27 16:01:20 recibidos=1296116 procesados=1296116 (20003 ev/s) ventana=1253095 llaves heap=83 MiB inválidos=0
+2026/09/27 16:01:25 recibidos=1396104 procesados=1396104 (19998 ev/s) ventana=1350468 llaves heap=83 MiB inválidos=0
+2026/09/27 16:01:30 recibidos=1496092 procesados=1496092 (19998 ev/s) ventana=1445863 llaves heap=91 MiB inválidos=0
+2026/09/27 16:01:35 recibidos=1596088 procesados=1596088 (19999 ev/s) ventana=1546266 llaves heap=83 MiB inválidos=0
+2026/09/27 16:01:40 recibidos=1696105 procesados=1696105 (20003 ev/s) ventana=1643734 llaves heap=148 MiB inválidos=0
+2026/09/27 16:01:45 recibidos=1796088 procesados=1796088 (19997 ev/s) ventana=1739184 llaves heap=159 MiB inválidos=0
+2026/09/27 16:01:50 recibidos=1896102 procesados=1896102 (20003 ev/s) ventana=1835628 llaves heap=147 MiB inválidos=0
+2026/09/27 16:01:55 recibidos=1996101 procesados=1996101 (20000 ev/s) ventana=1932082 llaves heap=165 MiB inválidos=0
+2026/09/27 16:02:00 recibidos=2096114 procesados=2096114 (20003 ev/s) ventana=2030473 llaves heap=184 MiB inválidos=0
+2026/09/27 16:02:05 recibidos=2196095 procesados=2196095 (19996 ev/s) ventana=2127963 llaves heap=119 MiB inválidos=0
+2026/09/27 16:02:10 recibidos=2296092 procesados=2296092 (19999 ev/s) ventana=2225449 llaves heap=133 MiB inválidos=0
+2026/09/27 16:02:15 recibidos=2396088 procesados=2396088 (19999 ev/s) ventana=2321885 llaves heap=141 MiB inválidos=0
+2026/09/27 16:02:20 recibidos=2496088 procesados=2496088 (20000 ev/s) ventana=2419387 llaves heap=171 MiB inválidos=0
+2026/09/27 16:02:25 recibidos=2596099 procesados=2596099 (20002 ev/s) ventana=2516857 llaves heap=138 MiB inválidos=0
+2026/09/27 16:02:30 recibidos=2695942 procesados=2695942 (19969 ev/s) ventana=2613177 llaves heap=227 MiB inválidos=0
+2026/09/27 16:02:35 recibidos=2796116 procesados=2796106 (20033 ev/s) ventana=2708678 llaves heap=225 MiB inválidos=0
+2026/09/27 16:02:40 recibidos=2896085 procesados=2896085 (19996 ev/s) ventana=2809085 llaves heap=176 MiB inválidos=0
+2026/09/27 16:02:45 recibidos=2996104 procesados=2996104 (20004 ev/s) ventana=2904496 llaves heap=260 MiB inválidos=0
+2026/09/27 16:02:50 recibidos=3096088 procesados=3096088 (19997 ev/s) ventana=3001921 llaves heap=245 MiB inválidos=0
+
+=== CONSUMIDOR: AGREGADO FINAL ===
+país      órdenes      órdenes USD        pagos        pagos USD   inventario
+MX         240412      14825927.68       204568      12609231.78       163894
+AR         240836      14845476.11       204495      12612236.36       163768
+CO         238820      14722007.35       203176      12540964.70       162489
+CL         239995      14771085.04       203717      12523200.88       162838
+PE         239937      14808124.43       203642      12559792.34       162601
+TOTAL     1200000      73972620.61      1019598      62845426.06       815590
+
+=== CONTEO ===
+líneas esperadas (EOF):     3126750
+primeras entregas:          3126750
+eventos únicos aplicados:   3035188
+duplicados descartados:     91562
+re-entregas del broker:     0 (descartadas por la ventana: 0)
+inválidos:                  0
+acks enviados (AckAll):     15583
+retraso de reintentos:      min=2s max=179s media=90.4s fuera de [2,180)s=0
+
+=== RENDIMIENTO ===
+throughput consumidor:      20000 ev/s (156.34s, primer recibido -> último aplicado)
+throughput end-to-end:      20000 ev/s (156.34s, primer publicado -> último aplicado)
+latencia e2e (publicado -> aplicado): p50=0.58ms p95=1.13ms p99=4.45ms max=55.42ms (n=3126750)
+heap pico: 287 MiB; ventana final: 3035188 llaves, 0 expulsiones prematuras
+
+=== CHEQUEOS ===
+[OK] accounting: unique + duplicates + invalid == first_deliveries
+[OK] aggregate_total == unique_applied
+[OK] no_premature_evictions
+[OK] no_loss: first_deliveries == expected_lines
+
+reporte: results\bench\consumer-20260927-160251.json
+heap profile: results\bench\heap-20260927-160251.pb.gz

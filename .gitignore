@@ -1,0 +1,47 @@
+# --- Dataset y generador (no forman parte del código cread) ---
+eventos_hotsale.jsonl
+*.jsonl
+generate_events_go03.py
+
+# --- Binarios de Go ---
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# --- Perfiles de pprof ---
+*.pb.gz
+*.prof
+*.pprof
+
+# --- Resultados de corridas ---
+# Se conservan results/bench/ (reportes JSON y logs citados en decisions.md)
+# y results/sweep.txt; las corridas exploratorias no.
+results/runs/
+results/profiles/
+
+# --- Go ---
+go.work
+go.work.sum
+vendor/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# --- Editores y SO ---
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+
