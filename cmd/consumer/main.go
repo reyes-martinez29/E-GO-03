@@ -61,6 +61,7 @@ type config struct {
 	AckBatch     int           `json:"ack_batch"`
 	AckEvery     time.Duration `json:"ack_max_interval"`
 	Label        string        `json:"label"`
+	NoDedup      bool          `json:"no_dedup"`
 }
 
 type shard struct {
@@ -68,6 +69,7 @@ type shard struct {
 	win     *dedup.Window
 	agg     agg.Agg
 	invalid *atomic.Int64
+	noDedup bool // solo para demostrar el problema: cuenta cada línea como evento
 
 	applied        int64 // eventos únicos aplicados al agregado
 	dups           int64 // duplicados del origen (reintentos del gateway) descartados
@@ -96,6 +98,7 @@ func main() {
 	flag.IntVar(&cfg.AckBatch, "ack-batch", 1000, "mensajes por lote de ack (AckAll)")
 	flag.DurationVar(&cfg.AckEvery, "ack-every", 10*time.Millisecond, "intervalo máximo para cerrar un lote de ack incompleto")
 	flag.StringVar(&cfg.Label, "label", "", "etiqueta de la corrida para el reporte")
+	flag.BoolVar(&cfg.NoDedup, "no-dedup", false, "DEMOSTRACIÓN: desactiva la deduplicación para ver el agregado inflado")
 	pprofAddr := flag.String("pprof", "localhost:6060", "dirección de net/http/pprof (vacío = desactivado)")
 	outDir := flag.String("out", "results", "carpeta para el reporte JSON y el heap profile")
 	flag.Parse()
@@ -150,7 +153,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		shards[i] = &shard{in: make(chan work, 1024), win: w, invalid: &invalid, minPubTs: 1<<63 - 1}
+		shards[i] = &shard{in: make(chan work, 1024), win: w, invalid: &invalid, noDedup: cfg.NoDedup, minPubTs: 1<<63 - 1}
 	}
 	var shardWG sync.WaitGroup
 	for _, s := range shards {
@@ -161,6 +164,9 @@ func main() {
 	var peakHeap atomic.Uint64
 	stopMon := monitor(shards, &received, &invalid, &peakHeap)
 
+	if cfg.NoDedup {
+		log.Printf("ATENCIÓN: -no-dedup activo; los reintentos se cuentan como eventos nuevos y el agregado NO es válido")
+	}
 	log.Printf("consumidor listo (shards=%d, ventana=%v/%d gen, retención garantizada=%v); esperando eventos...",
 		cfg.Shards, cfg.Window, cfg.Generations, shards[0].win.GuaranteedRetention())
 
@@ -293,7 +299,11 @@ func (s *shard) handle(msg jetstream.Msg) {
 		redelivered = true
 	}
 
-	dup, origTS := s.win.SeenOrAdd(ev.ID, ev.TS)
+	var dup bool
+	var origTS int64
+	if !s.noDedup {
+		dup, origTS = s.win.SeenOrAdd(ev.ID, ev.TS)
+	}
 	switch {
 	case redelivered:
 		s.redelivered++

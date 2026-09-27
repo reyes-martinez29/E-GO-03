@@ -277,6 +277,33 @@ calcula `ts_reintento − ts_original`. Resultado: min 2 s, max 179 s, media
 90.4 s, **0 fuera de [2, 180) s**, justo la distribución uniforme
 `rng.integers(2, 180)` del generador.
 
+### Contraprueba: el mismo pipeline sin deduplicación
+
+Para mostrar qué se evita, el consumidor tiene un flag de demostración,
+`-no-dedup`, que salta la ventana y cuenta cada línea como un evento. Corrida
+del archivo completo (`CONSUMER_ARGS="-no-dedup" scripts/bench.sh
+no-dedup-full 0`, reporte `results/bench/consumer-20260927-171132.json`):
+
+| | Con dedup (correcto) | Sin dedup | Error |
+| :--- | ---: | ---: | ---: |
+| Eventos contados | 3,035,188 | 3,126,750 | +91,562 |
+| Órdenes | 1,200,000 | 1,235,939 | +35,939 (+3.0 %) |
+| Órdenes USD | 73,972,620.61 | 76,184,636.11 | +2,212,015.50 |
+| Pagos confirmados | 1,019,598 | 1,050,464 | +30,866 |
+| **Pagos USD** | **62,845,426.06** | **64,740,965.16** | **+1,895,539.10** |
+| Inventario reservado | 815,590 | 840,347 | +24,757 |
+
+`cmd/verify -report` marca **FALLA** en los 5 países y en el total.
+
+Esto es el problema de negocio de la guía en números. Sin dedup, operaciones
+vería **USD 1.9 M de pagos que no existen** y 24,757 reservas de inventario
+de más. Decidir "reforzar inventario en MX" con 168,937 reservas en lugar de
+las 163,894 reales es decidir sobre un número falso. Lo notable es que la
+corrida sin dedup **pasa sus propios chequeos de contabilidad** (cada línea
+se aplicó una vez y no se perdió nada). Solo la comparación contra la verdad
+del archivo lo delata: "procesé el archivo" no es lo mismo que "procesé cada
+evento exactamente una vez".
+
 ### Cuándo NO coincidirían, y cómo se distinguiría
 
 El consumidor separa tres causas de "ver un event_id otra vez":
@@ -339,11 +366,22 @@ lector it.Next() ─▶ fetcher ─▶ shard[hash(event_id) % 8] ─▶ merge fi
 - El fetcher extrae solo el `event_id` de los bytes crudos para enrutar, y el
   `json.Unmarshal` ocurre dentro del shard. Eso preserva el orden por llave
   (H2) y mantiene el decode en paralelo (8 shards).
-- **Pendiente:** `go test -race` no se pudo correr en esta máquina. El gcc
-  instalado (`C:\MinGW`) es de 32 bits y el race detector necesita mingw-w64.
-  El diseño no comparte estado mutable entre goroutines fuera de `atomic` y
-  canales, pero esa afirmación queda sin verificar con la herramienta hasta
-  instalar un toolchain de 64 bits.
+- **Verificado con el race detector: 0 data races.** En Windows no se puede
+  usar `-race`: el gcc instalado (`C:\MinGW`) es de 32 bits y el race detector
+  necesita cgo de 64 bits. Por eso se corrió en un contenedor Linux
+  (`golang:1.26`, comandos en el README):
+  - `go test -race ./...`: OK.
+  - **Pipeline completo** con productor y consumidor compilados con `-race`,
+    en contenedores dentro de la red de compose, sobre las **3,126,750
+    líneas**: `WARNING: DATA RACE` aparece **0 veces** en ambos logs.
+    Resultado: 91,562 duplicados y los 4 chequeos en OK, a 23.8k ev/s (el
+    race detector hace más lento el pipeline). Evidencia en
+    `results/race/full/`, con una corrida previa de 300k líneas en
+    `results/race/`.
+
+  Esto cubre las interacciones concurrentes reales: lector ↔ fetcher, fetcher
+  ↔ shards, contadores `pending` de los lotes ↔ committer, contadores
+  atómicos ↔ monitor, y en el productor el lazo principal ↔ `confirmAcks`.
 - Dinero en **centavos `int64`**, parseados del texto decimal sin pasar por
   `float64`. Sumar ~1M floats acumula error y el total no cuadraría al
   centavo con el oráculo.

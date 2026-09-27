@@ -32,10 +32,28 @@ PowerShell son iguales cambiando `./bin/x.exe` por `.\bin\x.exe`.
 
 ### 1. Generar el dataset
 
+El generador y el dataset **no están en el repositorio** (ver `.gitignore`):
+`generate_events_go03.py` viene con el material del curso E-GO03 y el JSONL
+pesa ~666 MB. Copia el generador a la raíz del proyecto y ejecútalo:
+
 ```bash
-python generate_events_go03.py
+pip install numpy                  # si no lo tienes
+python generate_events_go03.py     # escribe eventos_hotsale.jsonl en la raíz
 # Eventos unicos: 3,035,188
 # Duplicados inyectados: 91,562 (3.02%)
+# Total de lineas en el archivo (unicos + duplicados): 3,126,750
+```
+
+El generador fija la semilla de numpy, así que conteos, países y montos
+salen idénticos en cada ejecución y las cifras de `decisions.md` son
+comparables. Lo único que cambia son los `event_id`/`order_id`
+(`uuid.uuid4()` no usa esa semilla), y eso no afecta ningún resultado.
+
+Para comprobar el archivo antes de levantar nada, el oráculo lo lee directo:
+
+```bash
+go run ./cmd/verify
+# líneas: 3126750  únicos: 3035188  duplicados: 91562 ...
 ```
 
 ### 2. Levantar el broker
@@ -52,9 +70,36 @@ go test ./...
 go build -o bin/ ./cmd/...
 ```
 
-`go test -race ./...` requiere cgo con un gcc de 64 bits (mingw-w64 en
-Windows). Con el MinGW de 32 bits falla con
-`cc1.exe: sorry, unimplemented: 64-bit mode not compiled in`.
+#### Race detector
+
+`go test -race` necesita cgo con un gcc de 64 bits. En Windows sin mingw-w64
+falla con `cc1.exe: sorry, unimplemented: 64-bit mode not compiled in`. La
+alternativa sin instalar nada es correrlo en un contenedor Linux:
+
+```bash
+MSYS_NO_PATHCONV=1 docker run --rm -v "$PWD":/src -w /src -e GOFLAGS=-buildvcs=false golang:1.26 go test -race -count=1 ./...
+```
+
+Para probar el pipeline completo bajo el race detector, productor y
+consumidor se compilan con `-race` y corren en contenedores dentro de la red
+de compose (`go-03_default`, el broker es `nats:4222`):
+
+```bash
+MSYS_NO_PATHCONV=1 docker run --rm -v "$PWD":/src -w /src -e GOFLAGS=-buildvcs=false golang:1.26 \
+  sh -c 'go build -race -o bin/consumer-race ./cmd/consumer && go build -race -o bin/producer-race ./cmd/producer'
+
+mkdir -p results/race
+MSYS_NO_PATHCONV=1 docker run -d --name race-consumer --network go-03_default -v "$PWD":/src -w /src golang:1.26 \
+  sh -c "./bin/consumer-race -url nats://nats:4222 -pprof '' -out results/race > results/race/consumer.log 2>&1"
+until grep -q "esperando eventos" results/race/consumer.log; do sleep 0.5; done
+MSYS_NO_PATHCONV=1 docker run --rm --network go-03_default -v "$PWD":/src -w /src golang:1.26 \
+  sh -c "./bin/producer-race -url nats://nats:4222 > results/race/producer.log 2>&1"
+docker wait race-consumer && docker rm race-consumer
+grep -c "WARNING: DATA RACE" results/race/*.log     # esperado: 0 en ambos
+```
+
+`MSYS_NO_PATHCONV=1` evita que Git Bash reescriba `/src` como una ruta de
+Windows; en PowerShell se omite.
 
 ### 4. Correr el pipeline
 
@@ -89,6 +134,13 @@ chequeos de consistencia, y escribe `results/consumer-<fecha>.json` y
 ```bash
 scripts/bench.sh baseline-20k-full 20000      # <label> <rate> [limit]
 scripts/bench.sh flood-full 0
+```
+
+### Demostración: qué pasa sin deduplicación
+
+```bash
+CONSUMER_ARGS="-no-dedup" scripts/bench.sh no-dedup-full 0
+./bin/verify.exe -report results/bench/consumer-<fecha>.json   # FALLA en los 5 países
 ```
 
 ### 7. Profiling
@@ -126,6 +178,7 @@ primer mensaje retenido en el stream y reconstruye ventana y agregado juntos
 | consumer | `-dedup-window` / `-dedup-gens` / `-dedup-min` | 5m / 10 / 3m | ventana de dedup |
 | consumer | `-ack-batch` / `-ack-every` | 1000 / 10ms | lote de ack |
 | consumer | `-purge` | true | vaciar el stream al arrancar |
+| consumer | `-no-dedup` | false | **demostración**: desactiva la dedup para ver el agregado inflado |
 | consumer | `-pprof` | localhost:6060 | vacío = desactivado |
 
 ## Apagar
